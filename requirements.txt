@@ -1,0 +1,10 @@
+scipy
+numpy
+pandas
+scikit-learn
+mysql-connector-python
+blosc
+zstd
+lz4
+imbalanced-learn
+liac-arff

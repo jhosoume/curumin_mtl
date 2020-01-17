@@ -1,0 +1,11 @@
+{
+    "mysql": {
+        "host":"localhost",
+        "user":"pytester",
+        "password":"tortoise",
+        "database":"paje10"
+    },
+    "dataset": {
+        "folder":"mock_datasets/"
+    }
+}
