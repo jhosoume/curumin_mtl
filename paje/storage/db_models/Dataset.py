@@ -73,6 +73,29 @@ class Dataset(Model):
         return cls._fetchone(sql_select, attrs)
 
     @classmethod
+    def get_or_insert(cls, name, preprocess):
+        preprocessed = True if preprocess else False
+        sql_select = """
+            SELECT * FROM datasets
+            WHERE name = %s AND
+                  preprocess = %s
+            LIMIT 1;
+        """
+        attrs = [name, preprocess]
+        result = cls._fetchone(sql_select, attrs)
+        if result:
+            return result
+        else:
+            sql_insert = """
+                INSERT INTO datasets (name, preprocessed, preprocess)
+                    VALUES (%s, %s, %s);
+            """
+            attrs = [name, preprocessed, preprocess]
+            Dataset._query(sql_insert, attrs)
+            Dataset._commit()
+            return cls.get_one(name, preprocess)
+
+    @classmethod
     def get_by_name(cls, name):
         sql_select = """
             SELECT * FROM datasets

@@ -17,7 +17,7 @@ class Model(ABC):
 
     @classmethod
     def _query(cls, sql_string, attrs = None):
-        cls.db.query(sql_string, attrs)
+        return cls.db.query(sql_string, attrs)
 
     @classmethod
     def _commit(cls):
@@ -48,13 +48,19 @@ class Model(ABC):
     def _fetchone(cls, sql_select, args = None):
         cls.db.query(sql_select, args)
         instance = cls.db._cursor.fetchone()
-        return cls._from_query(instance)
+        if instance:
+            return cls._from_query(instance)
+        else:
+            print("Select not found!")
 
     @classmethod
     def _fetchall(cls, sql_select, args = None):
         cls.db.query(sql_select, args)
         instances = cls.db._cursor.fetchall()
-        return [cls._from_query(inst) for inst in instances]
+        if instances:
+            return [cls._from_query(inst) for inst in instances]
+        else:
+            print("Select not found!")
 
     @classmethod
     @abstractmethod

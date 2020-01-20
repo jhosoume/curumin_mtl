@@ -23,11 +23,10 @@ class Feature(Model):
 
     def save(self):
         sql_insert = """
-            INSERT INTO datasets (name)
+            INSERT INTO features (name)
                 VALUES (%s);
         """
-        attrs = [self.name, self.preprocessed, self.preprocess]
-        Feature._query(sql_insert, attrs)
+        Feature._query(sql_insert, [self.name])
         Feature._commit()
         self.id = Feature._get_id_saved()
         print("Feature record inserted.")
@@ -36,8 +35,7 @@ class Feature(Model):
     def _from_query(cls, inst):
         return Feature(
             id = inst[0],
-            name = inst[1],
-            preprocess = inst[3]
+            name = inst[1]
         )
 
     @classmethod
@@ -46,30 +44,12 @@ class Feature(Model):
             SELECT * FROM features
             WHERE id = %s;
         """
-        return cls._fetchone(sql_select, [dataset.id])
+        return cls._fetchone(sql_select, [feature.id])
 
     @classmethod
-    def get_one(cls, name, preprocess):
-        sql_select = """
-            SELECT * FROM features
-            WHERE name = %s AND
-                  preprocess = %s;
-        """
-        attrs = [name, preprocess]
-        return cls._fetchone(sql_select, attrs)
-
-    @classmethod
-    def get_by_name(cls, name):
+    def get_one(cls, name):
         sql_select = """
             SELECT * FROM features
             WHERE name = %s;
         """
-        return cls._fetchall(sql_select, [name])
-
-    @classmethod
-    def get_preprocessed_by(cls, preprocess):
-        sql_select = """
-            SELECT * FROM features
-            WHERE preprocess = %s;
-        """
-        return cls._fetchall(sql_select, [preprocess])
+        return cls._fetchone(sql_select, [name])
