@@ -41,6 +41,22 @@ class Model(ABC):
         pass
 
     @classmethod
+    def _get_id_saved(cls):
+        return cls.db._cursor.lastrowid
+
+    @classmethod
+    def _fetchone(cls, sql_select, args = None):
+        cls.db.query(sql_select, args)
+        instance = cls.db._cursor.fetchone()
+        return cls._from_query(instance)
+
+    @classmethod
+    def _fetchall(cls, sql_select, args = None):
+        cls.db.query(sql_select, args)
+        instances = cls.db._cursor.fetchall()
+        return [cls._from_query(inst) for inst in instances]
+
+    @classmethod
     @abstractmethod
     def _from_query(cls, inst):
         pass
@@ -48,6 +64,4 @@ class Model(ABC):
     @classmethod
     def get_all(cls):
         sql_all = "SELECT * FROM {};".format(cls.table_name)
-        cls.db.query(sql_all)
-        instances = cls.db._cursor.fetchall()
-        return [cls._from_query(inst) for inst in instances]
+        return cls._fetchall(sql_all)

@@ -1,63 +1,49 @@
 from paje.storage.db_models.Model import Model
 
-class Dataset(Model):
-    table_name = "datasets"
+class Feature(Model):
+    table_name = "features"
 
-    def __init__(self, name = "", preprocess = None, id = None):
+    def __init__(self, name = "", id = None):
         self.id = id
         self.name = name
-        if preprocess:
-            self.preprocessed = True
-            self.preprocess = preprocess
-        else:
-            self.preprocessed = False
-            self.preprocess = None
 
     def __repr__(self):
-        return "Dataset(id = {}, name = {}, preprocess = {})".format(
-                    self.id, self.name, self.preprocess)
+        return "Feature(id = {}, name = {})".format(self.id, self.name)
 
     @classmethod
     def create_table(cls):
         sql_create = """
             CREATE TABLE IF NOT EXISTS {} (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                name VARCHAR(255) NOT NULL,
-                preprocessed BOOLEAN NOT NULL DEFAULT 0,
-                preprocess VARCHAR(255) DEFAULT NULL,
+                name VARCHAR(255) NOT NULL UNIQUE,
                 INDEX (name)
             );
         """.format(cls.table_name)
-        Dataset._create_table(sql_create)
-        sql_unique = """
-            ALTER TABLE datasets
-                ADD UNIQUE INDEX (name, preprocess);
-        """
-        Dataset._query(sql_unique)
+        Feature._create_table(sql_create)
 
     def save(self):
         sql_insert = """
-            INSERT INTO datasets (name, preprocessed, preprocess)
-                VALUES (%s, %s, %s);
+            INSERT INTO datasets (name)
+                VALUES (%s);
         """
         attrs = [self.name, self.preprocessed, self.preprocess]
-        Dataset._query(sql_insert, attrs)
-        Dataset._commit()
-        self.id = Dataset._get_id_saved()
-        print("Dataset record inserted.")
+        Feature._query(sql_insert, attrs)
+        Feature._commit()
+        self.id = Feature._get_id_saved()
+        print("Feature record inserted.")
 
     @classmethod
     def _from_query(cls, inst):
-        return Dataset(
+        return Feature(
             id = inst[0],
             name = inst[1],
             preprocess = inst[3]
         )
 
     @classmethod
-    def get(cls, dataset):
+    def get(cls, feature):
         sql_select = """
-            SELECT * FROM datasets
+            SELECT * FROM features
             WHERE id = %s;
         """
         return cls._fetchone(sql_select, [dataset.id])
@@ -65,7 +51,7 @@ class Dataset(Model):
     @classmethod
     def get_one(cls, name, preprocess):
         sql_select = """
-            SELECT * FROM datasets
+            SELECT * FROM features
             WHERE name = %s AND
                   preprocess = %s;
         """
@@ -75,7 +61,7 @@ class Dataset(Model):
     @classmethod
     def get_by_name(cls, name):
         sql_select = """
-            SELECT * FROM datasets
+            SELECT * FROM features
             WHERE name = %s;
         """
         return cls._fetchall(sql_select, [name])
@@ -83,7 +69,7 @@ class Dataset(Model):
     @classmethod
     def get_preprocessed_by(cls, preprocess):
         sql_select = """
-            SELECT * FROM datasets
+            SELECT * FROM features
             WHERE preprocess = %s;
         """
         return cls._fetchall(sql_select, [preprocess])
