@@ -16,7 +16,8 @@ class MtLAutoML(AutoML):
                  pipe_length,
                  repetitions,
                  random_state,
-                 cache_settings_for_components=None,
+                 train_databases = None,
+                 cache_settings_for_components = None,
                  **kwargs):
         """
         AutoML
@@ -50,6 +51,7 @@ class MtLAutoML(AutoML):
         # __init__()
         self.modelers = modelers
         self.preprocessors = preprocessors
+        self.train_databases = train_databases
 
         if not isinstance(modelers, list) or \
                 not isinstance(preprocessors, list):

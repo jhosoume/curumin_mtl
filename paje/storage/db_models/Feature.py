@@ -44,7 +44,7 @@ class Feature(Model):
             SELECT * FROM features
             WHERE id = %s;
         """
-        return cls._fetchone(sql_select, [feature.id])
+        return cls._fetchone(sql_select, [feature])
 
     @classmethod
     def get_one(cls, name):
@@ -53,3 +53,22 @@ class Feature(Model):
             WHERE name = %s;
         """
         return cls._fetchone(sql_select, [name])
+
+    @classmethod
+    def get_or_insert(cls, name):
+        sql_select = """
+            SELECT * FROM features
+            WHERE name = %s
+            LIMIT 1;
+        """
+        result = cls._fetchone(sql_select, [name])
+        if result:
+            return result
+        else:
+            sql_insert = """
+                INSERT INTO features (name)
+                    VALUES (%s);
+            """
+            cls._query(sql_insert, [name])
+            cls._commit()
+            return cls.get_one(name)

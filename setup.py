@@ -45,7 +45,8 @@ CLASSIFIERS = ['Intended Audience :: Science/Research',
 
 INSTALL_REQUIRES = [
     'scipy', 'numpy', 'pandas', 'scikit-learn',
-    'zstd', 'lz4', 'imbalanced-learn', 'liac-arff', 'mysql-connector-python'
+    'zstd', 'lz4', 'imbalanced-learn', 'liac-arff', 'mysql-connector-python',
+    'pymfe'
 ]
 
 

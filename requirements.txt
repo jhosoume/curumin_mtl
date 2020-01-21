@@ -8,3 +8,4 @@ zstd
 lz4
 imbalanced-learn
 liac-arff
+pymfe
