@@ -21,7 +21,7 @@ class DT(Classifier):
 
         hps = {
             'criterion': CatHP(choice, a=['gini', 'entropy']),
-            'splitter': CatHP(choice, a=['best']),
+            'splitter': CatHP(choice, a=['best', 'random']),
             'class_weight': CatHP(choice, a=[None, 'balanced']),
             'max_features': CatHP(choice, a=['auto', 'sqrt', 'log2', None]),
 
@@ -36,5 +36,19 @@ class DT(Classifier):
         return ConfigSpace(name='DT', hps=hps)
 
     @classmethod
-    def static():
-        pass
+    # Creates a configuration of only default options
+    def default(cls):
+        config = {
+            'criterion': 'gini',
+            'splitter': 'best',
+            'class_weight': None,
+            'max_features': None,
+            'max_depth': None,
+            'min_samples_split': 2,
+            'min_samples_leaf': 1,
+            'min_weight_fraction_leaf': 0.0,
+            'min_impurity_decrease': 0.0
+        }
+        config['class'] = cls.__name__
+        config['module'] = cls.__module__
+        return config

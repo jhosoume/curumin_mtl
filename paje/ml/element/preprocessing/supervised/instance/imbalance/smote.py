@@ -15,8 +15,18 @@ class SMOTE(Imbalance):
         hps = {
             'sampling_strategy': CatHP(
                 choice,
-                items=['not minority', 'not majority', 'all', 'minority']
+                items=['not minority', 'not majority', 'all', 'minority', 'auto']
             ),
             'k_neighbours': IntHP(uniform, low=2, high=1000)
         }
         return ConfigSpace(name=cls.__name__, hps=hps)
+
+    @classmethod
+    # Creates a configuration of only default options
+    def default(cls):
+        config = {
+            'sampling_strategy': 'auto',
+        }
+        config['class'] = cls.__name__
+        config['module'] = cls.__module__
+        return config
