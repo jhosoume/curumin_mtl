@@ -50,8 +50,6 @@ class Model(ABC):
         instance = cls.db._cursor.fetchone()
         if instance:
             return cls._from_query(instance)
-        else:
-            print("Select not found!")
 
     @classmethod
     def _fetchall(cls, sql_select, args = None):
@@ -59,8 +57,6 @@ class Model(ABC):
         instances = cls.db._cursor.fetchall()
         if instances:
             return [cls._from_query(inst) for inst in instances]
-        else:
-            print("Select not found!")
 
     @classmethod
     @abstractmethod

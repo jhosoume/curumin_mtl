@@ -41,13 +41,13 @@ class Metadata(Model):
             INSERT INTO metadata (dataset_id, feature_id, value)
                 VALUES (
                     %s, %s, %s
-                );
+                )
+                ON DUPLICATE KEY UPDATE value = value;
         """
         attrs = [dt.id, ft.id, self.value]
         Metadata._query(sql_insert, attrs)
         Metadata._commit()
         self.id = Metadata._get_id_saved()
-        print("Metadata record inserted.")
 
     @classmethod
     def _from_query(cls, inst):

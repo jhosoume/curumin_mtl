@@ -29,7 +29,6 @@ class Dataset(Model):
         Dataset._query(sql_insert, [self.name])
         Dataset._commit()
         self.id = Dataset._get_id_saved()
-        print("Dataset record inserted.")
 
     @classmethod
     def _from_query(cls, inst):

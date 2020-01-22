@@ -37,11 +37,12 @@ class Component(ABC):
         self.name = self.config['class']
         self.module = self.config['module']
 
+        # a = Apply, u = Use
         self._modified = {'a': None, 'u': None}
 
         # self.model here refers to classifiers, preprocessors and, possibly,
         # some representation of pipelines or the autoML itself.
-        # Another possibility is to generalize modules to a new class Module()
+        # Another possibility is to generalize modules to a new class Model()
         # that has self.model.
         self.unfit = True
         self.model = None

@@ -32,7 +32,6 @@ class Regressor(Model):
         Regressor._query(sql_insert, [self.name, self.type])
         Regressor._commit()
         self.id = Regressor._get_id_saved()
-        print("Regressor record inserted.")
 
     @classmethod
     def _from_query(cls, inst):

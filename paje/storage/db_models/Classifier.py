@@ -32,7 +32,6 @@ class Classifier(Model):
         Classifier._query(sql_insert, [self.name, self.type])
         Classifier._commit()
         self.id = Classifier._get_id_saved()
-        print("Classifier record inserted.")
 
     @classmethod
     def _from_query(cls, inst):

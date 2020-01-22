@@ -32,7 +32,6 @@ class Preprocess(Model):
         Preprocess._query(sql_insert, [self.name, self.type])
         Preprocess._commit()
         self.id = Preprocess._get_id_saved()
-        print("Preprocess record inserted.")
 
     @classmethod
     def _from_query(cls, inst):

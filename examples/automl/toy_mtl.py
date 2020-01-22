@@ -23,7 +23,7 @@ def main():
     if len(sys.argv[1:]) < 1 or any(['=' not in k for k in sys.argv[1:]]):
         print('Usage: \npython toy.py data=/tmp/dataset.arff '
               '[iter=#] [seed=#] [cache=sqlite/amnesia] ['
-              'db=dna] ')
+              'db=dna]')
     else:
         arg = {tupl.split('=')[0]: tupl.split('=')[1] for tupl in sys.argv[1:]}
 
@@ -63,10 +63,10 @@ def main():
 
         iterations = int(arg['iter']) if 'iter' in arg else 3
         random_state = int(arg['seed']) if 'seed' in arg else 0
+        mtl_datasets = arg['datasets'] if 'datasets' in arg else "mock_datasets/"
         data = Data.read_arff(arg['data'], "class")
 
         trainset, testset = data.split(random_state=random_state)
-        import pdb; pdb.set_trace()
         automl_rs = MtLAutoML(
             # preprocessors=default_preprocessors,
             # modelers=default_modelers,
@@ -75,16 +75,17 @@ def main():
             max_iter=iterations,
             pipe_length=2, repetitions=1,
             random_state=random_state,
+            train_datasets = mtl_datasets,
             cache_settings_for_components=storage,
             config={}
         )
-        automl_rs.apply(trainset)
-        testout = automl_rs.use(testset)
-        if testout is None:
-            print('No working pipeline found!')
-            exit(0)
-        print("Accuracy score", Metrics.accuracy(testout))
-        print()
+        # automl_rs.apply(trainset)
+        # testout = automl_rs.use(testset)
+        # if testout is None:
+        #     print('No working pipeline found!')
+        #     exit(0)
+        # print("Accuracy score", Metrics.accuracy(testout))
+        # print()
 
 
 if __name__ == '__main__':

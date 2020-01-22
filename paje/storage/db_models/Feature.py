@@ -29,7 +29,6 @@ class Feature(Model):
         Feature._query(sql_insert, [self.name])
         Feature._commit()
         self.id = Feature._get_id_saved()
-        print("Feature record inserted.")
 
     @classmethod
     def _from_query(cls, inst):

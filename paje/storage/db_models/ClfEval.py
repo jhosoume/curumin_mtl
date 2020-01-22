@@ -32,7 +32,7 @@ class ClfEval(Model):
                 UNIQUE INDEX (classifier_id, dataset_id, score_id, preprocess_id),
                 FOREIGN KEY (classifier_id)
                     REFERENCES classifiers(id)
-                    ON DELETE CASCADE
+                    ON DELETE CASCADE,
                 FOREIGN KEY (dataset_id)
                     REFERENCES datasets(id)
                     ON DELETE CASCADE,
@@ -41,7 +41,7 @@ class ClfEval(Model):
                     ON DELETE CASCADE,
                 FOREIGN KEY (preprocess_id)
                     REFERENCES preprocesses(id)
-                    ON DELETE CASCADE,
+                    ON DELETE CASCADE
             );
         """.format(cls.table_name)
         ClfEval._create_table(sql_create)
@@ -61,7 +61,6 @@ class ClfEval(Model):
         ClfEval._query(sql_insert, attrs)
         ClfEval._commit()
         self.id = ClfEval._get_id_saved()
-        print("ClfEval record inserted.")
 
     @classmethod
     def _from_query(cls, inst):

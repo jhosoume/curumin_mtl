@@ -29,7 +29,6 @@ class Score(Model):
         Score._query(sql_insert, [self.name])
         Score._commit()
         self.id = Score._get_id_saved()
-        print("Score record inserted.")
 
     @classmethod
     def _from_query(cls, inst):

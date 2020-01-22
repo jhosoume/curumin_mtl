@@ -1,4 +1,5 @@
 import numpy as np
+from pymfe.mfe import MFE
 from paje.automl.automl import AutoML
 from paje.automl.composer.iterator import Iterator
 from paje.automl.composer.seq import Seq
@@ -6,7 +7,7 @@ from paje.base.cache import Cache
 from paje.ml.element.posprocessing.metric import Metric
 from paje.ml.element.posprocessing.summ import Summ
 from paje.ml.element.preprocessing.supervised.instance.sampler.cv import CV
-
+from paje.automl.meta.metafeatures import MetaFeatures
 
 class MtLAutoML(AutoML):
 
@@ -16,7 +17,7 @@ class MtLAutoML(AutoML):
                  pipe_length,
                  repetitions,
                  random_state,
-                 train_databases = None,
+                 train_datasets = None,
                  cache_settings_for_components = None,
                  **kwargs):
         """
@@ -27,7 +28,6 @@ class MtLAutoML(AutoML):
             (classification or regression etc.)
         :param repetitions: how many times can a module appear
             in a pipeline
-        :param method: TODO
         :param max_iter: maximum number of pipelines to evaluate
         :param max_depth: maximum length of a pipeline
         :param static: are the pipelines generated always exactly
@@ -42,6 +42,7 @@ class MtLAutoML(AutoML):
                         components=preprocessors + modelers,
                         **kwargs)
 
+
         # These attributes identify uniquely AutoML.
         # This structure is necessary because the AutoML is a Component and it
         # could be used into other Components, like the Pipeline one.
@@ -51,7 +52,10 @@ class MtLAutoML(AutoML):
         # __init__()
         self.modelers = modelers
         self.preprocessors = preprocessors
-        self.train_databases = train_databases
+        self.train_datasets = train_datasets
+
+        self.mfe = MetaFeatures()
+        self.mfe.apply(self.train_datasets)
 
         if not isinstance(modelers, list) or \
                 not isinstance(preprocessors, list):

@@ -8,7 +8,7 @@ from sklearn.model_selection import StratifiedKFold, LeaveOneOut, \
 from paje.base.iterable import Iterable
 from paje.ml.element.preprocessing.split import Split
 
-
+# Cross Validation
 class CV(Iterable):
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)

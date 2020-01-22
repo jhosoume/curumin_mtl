@@ -37,15 +37,6 @@ class MtLDBBase:
         self._con.set_converter_class(NumpyMySQLConverter)
         self._cursor = self._con.cursor()
 
-        # Preparing MySQL to be used -> create tables
-        self._open()
-
-    def _open(self):
-        self._setup()
-
-    def _setup(self):
-        pass
-
     def query(self, sql_string, args = None):
         if args is None:
             args = []

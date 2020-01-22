@@ -35,16 +35,16 @@ class RegEval(Model):
                     ON DELETE CASCADE,
                 FOREIGN KEY (classifier_id)
                     REFERENCES classifiers(id)
-                    ON DELETE CASCADE
+                    ON DELETE CASCADE,
                 FOREIGN KEY (score_id)
                     REFERENCES scores(id)
                     ON DELETE CASCADE,
                 FOREIGN KEY (preprocess_id)
                     REFERENCES preprocesses(id)
-                    ON DELETE CASCADE,
+                    ON DELETE CASCADE
             );
         """.format(cls.table_name)
-        ClfEval._create_table(sql_create)
+        RegEval._create_table(sql_create)
 
     def save(self):
         reg = Regressor.get_or_insert(self.regressor)
@@ -58,14 +58,13 @@ class RegEval(Model):
                 );
         """
         attrs = [reg.id, cls.id, score.id, preprocess.id, self.value]
-        ClfEval._query(sql_insert, attrs)
-        ClfEval._commit()
-        self.id = ClfEval._get_id_saved()
-        print("ClfEval record inserted.")
+        RegEval._query(sql_insert, attrs)
+        RegEval._commit()
+        self.id = RegEval._get_id_saved()
 
     @classmethod
     def _from_query(cls, inst):
-        return ClfEval(
+        return RegEval(
             id = inst[0],
             regressor = Regressor.get(inst[1]).name,
             classifier = Classifier.get(inst[2]).name,
