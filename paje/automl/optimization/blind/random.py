@@ -81,6 +81,7 @@ class RandomAutoML(AutoML):
         components = self.choose_modules()
         tree = Seq.cs(config_spaces=components)
 
+        import pdb; pdb.set_trace()
         config = tree.sample()
 
         config['random_state'] = self.random_state

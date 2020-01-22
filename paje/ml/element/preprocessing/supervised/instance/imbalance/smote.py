@@ -1,12 +1,11 @@
 from imblearn.over_sampling import SMOTE
 from paje.searchspace.hp import CatHP
 from paje.searchspace.configspace import ConfigSpace
-from paje.ml.element.preprocessing.supervised.instance.imbalance import Imbalance
-    Scaler
+from paje.ml.element.preprocessing.supervised.instance.imbalance.imbalance import Imbalance
 from paje.util.distributions import choice
 
 
-class SMOTE(Scaler):
+class SMOTE(Imbalance):
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
         self.model = SMOTE(**self.param())

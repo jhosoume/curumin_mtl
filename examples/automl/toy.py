@@ -65,7 +65,7 @@ def main():
         data = Data.read_arff(arg['data'], "class")
 
         trainset, testset = data.split(random_state=random_state)
-        
+
         automl_rs = RandomAutoML(
             # preprocessors=default_preprocessors,
             # modelers=default_modelers,

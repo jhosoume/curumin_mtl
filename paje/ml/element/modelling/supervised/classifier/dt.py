@@ -34,3 +34,7 @@ class DT(Classifier):
         }
 
         return ConfigSpace(name='DT', hps=hps)
+
+    @classmethod
+    def static():
+        pass

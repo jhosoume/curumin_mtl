@@ -8,6 +8,7 @@ from paje.ml.element.posprocessing.metric import Metric
 from paje.ml.element.posprocessing.summ import Summ
 from paje.ml.element.preprocessing.supervised.instance.sampler.cv import CV
 from paje.automl.meta.metafeatures import MetaFeatures
+from paje.automl.meta.classifiers_eval import ClassifiersEval
 
 class MtLAutoML(AutoML):
 
@@ -55,7 +56,10 @@ class MtLAutoML(AutoML):
         self.train_datasets = train_datasets
 
         self.mfe = MetaFeatures()
-        self.mfe.apply(self.train_datasets)
+        # self.mfe.apply(self.train_datasets)
+
+        self.clfeval = ClassifiersEval()
+        self.clfeval.calculate("abalone3.arff")
 
         if not isinstance(modelers, list) or \
                 not isinstance(preprocessors, list):

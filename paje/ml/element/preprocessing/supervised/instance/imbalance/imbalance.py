@@ -4,7 +4,6 @@ from abc import ABC
 
 from paje.ml.element.element import Element
 
-
 class Imbalance(Element, ABC):
     def apply_impl(self, data):
         # self.model will be set in the child class
