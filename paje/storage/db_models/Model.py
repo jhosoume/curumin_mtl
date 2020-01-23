@@ -59,6 +59,11 @@ class Model(ABC):
             return [cls._from_query(inst) for inst in instances]
 
     @classmethod
+    def _fetchall_raw(cls, sql_select, args = None):
+        cls.db.query(sql_select, args)
+        return cls.db._cursor.fetchall()
+
+    @classmethod
     @abstractmethod
     def _from_query(cls, inst):
         pass

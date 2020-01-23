@@ -9,6 +9,7 @@ from paje.ml.element.posprocessing.summ import Summ
 from paje.ml.element.preprocessing.supervised.instance.sampler.cv import CV
 from paje.automl.meta.metafeatures import MetaFeatures
 from paje.automl.meta.classifiers_eval import ClassifiersEval
+from paje.automl.meta.regressors_eval import RegressorsEval
 
 class MtLAutoML(AutoML):
 
@@ -59,7 +60,10 @@ class MtLAutoML(AutoML):
         # self.mfe.apply(self.train_datasets)
 
         self.clfeval = ClassifiersEval()
-        self.clfeval.apply(self.train_datasets)
+        # self.clfeval.apply(self.train_datasets)
+
+        self.regeval = RegressorsEval()
+
 
         if not isinstance(modelers, list) or \
                 not isinstance(preprocessors, list):

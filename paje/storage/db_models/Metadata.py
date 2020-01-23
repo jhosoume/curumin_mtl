@@ -1,3 +1,4 @@
+import pandas as pd
 from paje.storage.db_models.Model import Model
 from paje.storage.db_models.Dataset import Dataset
 from paje.storage.db_models.Feature import Feature
@@ -94,3 +95,27 @@ class Metadata(Model):
             WHERE feature_id = (SELECT id FROM features WHERE name = %s);
         """
         return cls._fetchall(sql_select, [feature_name])
+
+    @classmethod
+    def get_matrix(cls):
+        sql_select = """
+            SELECT * FROM datasets;
+        """
+        datasets = Dataset._fetchall(sql_select)
+        metadata = []
+        for dataset in datasets:
+            sql_select = """
+                SELECT value FROM metadata
+                WHERE dataset_id = %s
+                ORDER BY feature_id;
+            """
+            features = [feat for tup_feat in cls._fetchall_raw(sql_select, [dataset.id]) for feat in tup_feat]
+            if features:
+                metadata.append([dataset.id] + features)
+        sql_select = """
+            SELECT name FROM features
+            ORDER BY id;
+        """
+        features_names = [feat for tup_feat in cls._fetchall_raw(sql_select) for feat in tup_feat]
+        pd.DataFrame(metadata, columns = ["dataset_id"] + features_names)
+        import pdb; pdb.set_trace()
