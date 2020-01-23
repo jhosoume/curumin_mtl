@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from paje.storage.db_models.Model import Model
 from paje.storage.db_models.Dataset import Dataset
 from paje.storage.db_models.Feature import Feature
@@ -6,47 +7,59 @@ from paje.storage.db_models.Feature import Feature
 class Metadata(Model):
     table_name = "metadata"
 
-    def __init__(self, dataset = None, feature = None, value = 0.0, id = None):
+    def __init__(self, dataset = None, features = None, values = None, id = None, dataset_id = None):
         self.id = id
         self.dataset = dataset
-        self.feature = feature
-        self.value = value
+        self.dataset_id =   dataset_id
+        self.features = features
+        self.values = values
 
     def __repr__(self):
-        return "Metadata(id = {}, dataset = {}, feature = {}, value = {})".format(
-            self.id, self.dataset, self.feature, self.value)
+        return "Metadata(id = {}, dataset = {})".format(
+            self.id, self.dataset)
 
     @classmethod
     def create_table(cls):
         sql_create = """
-            CREATE TABLE IF NOT EXISTS {} (
+            CREATE TABLE IF NOT EXISTS metadata (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                dataset_id INT NOT NULL,
-                feature_id INT NOT NULL,
-                value DOUBLE NOT NULL,
-                UNIQUE INDEX (dataset_id, feature_id),
+                dataset_id INT NOT NULL{}
+                UNIQUE INDEX (dataset_id),
                 FOREIGN KEY (dataset_id)
                     REFERENCES datasets(id)
-                    ON DELETE CASCADE,
-                FOREIGN KEY (feature_id)
-                    REFERENCES features(id)
                     ON DELETE CASCADE
             );
-        """.format(cls.table_name)
-        Metadata._create_table(sql_create)
+        """
+        for feature in cls._get_feats():
+            if feature == "int":
+                feature = "intt"
+            sql_create = sql_create.format(""", {} DOUBLE{}""").format(feature, {})
+        sql_create = sql_create.format(",\n")
+        cls._create_table(sql_create)
 
     def save(self):
         dt = Dataset.get_or_insert(self.dataset)
-        ft = Feature.get_or_insert(self.feature)
         sql_insert = """
-            INSERT INTO metadata (dataset_id, feature_id, value)
+            INSERT INTO metadata ({})
                 VALUES (
-                    %s, %s, %s
+                    {}
                 )
-                ON DUPLICATE KEY UPDATE value = value;
         """
-        attrs = [dt.id, ft.id, self.value]
-        Metadata._query(sql_insert, attrs)
+        # Getting types in the format suitable for inclusion
+        valid_types = ""
+        for type in ["dataset_id"] + self.features:
+            if type == "int":
+                type = "intt"
+            valid_types += type.replace(".", "_") + ", "
+        valid_types = valid_types[:-2]
+        # Including fields to be substituted by the values
+        to_subst = ""
+        for indx in range(len(self.values) + 1):
+            to_subst += "%s, "
+        to_subst = to_subst[:-2] # Elimineting comma and empty space
+        # print(sql_insert.format(valid_types, to_subst))
+
+        Metadata._query(sql_insert.format(valid_types, to_subst), [dt.id] + self.values)
         Metadata._commit()
         self.id = Metadata._get_id_saved()
 
@@ -54,9 +67,9 @@ class Metadata(Model):
     def _from_query(cls, inst):
         return Metadata(
             id = inst[0],
+            dataset_id = inst[1],
             dataset = Dataset.get(inst[1]).name,
-            feature = Feature.get(inst[2]).name,
-            value = inst[3]
+            values = inst[2:]
         )
 
     @classmethod
@@ -67,18 +80,6 @@ class Metadata(Model):
         """
         return cls._fetchone(sql_select, [metadata])
 
-    @classmethod
-    def get_one(cls, dataset_name, feature_name):
-        dt = Dataset.get_or_insert(dataset_name)
-        ft = Feature.get_or_insert(feature_name)
-        sql_select = """
-            SELECT * FROM metadata
-            WHERE dataset_id = %s AND
-                  feature_id = %s
-            LIMIT 1;
-        """
-        attrs = [dt.id, ft.id]
-        return cls._fetchone(sql_select, attrs)
 
     @classmethod
     def get_by_dataset(cls, dataset_name):
@@ -89,33 +90,19 @@ class Metadata(Model):
         return cls._fetchall(sql_select, [dataset_name])
 
     @classmethod
-    def get_by_feature(cls, feature_name):
-        sql_select = """
-            SELECT * FROM metadata
-            WHERE feature_id = (SELECT id FROM features WHERE name = %s);
-        """
-        return cls._fetchall(sql_select, [feature_name])
+    def _get_feats(cls):
+        from sklearn.datasets import load_iris
+        from pymfe.mfe import MFE
+        data = load_iris()
+        mfe = MFE()
+        mfe.fit(data.data, data.target)
+        ft = mfe.extract()
+        _feats = [feature.replace(".", "_") for feature in ft[0]]
+        return _feats
 
     @classmethod
     def get_matrix(cls):
-        sql_select = """
-            SELECT * FROM datasets;
-        """
-        datasets = Dataset._fetchall(sql_select)
-        metadata = []
-        for dataset in datasets:
-            sql_select = """
-                SELECT value FROM metadata
-                WHERE dataset_id = %s
-                ORDER BY feature_id;
-            """
-            features = [feat for tup_feat in cls._fetchall_raw(sql_select, [dataset.id]) for feat in tup_feat]
-            if features:
-                metadata.append([dataset.id] + features)
-        sql_select = """
-            SELECT name FROM features
-            ORDER BY id;
-        """
-        features_names = [feat for tup_feat in cls._fetchall_raw(sql_select) for feat in tup_feat]
-        pd.DataFrame(metadata, columns = ["dataset_id"] + features_names)
-        import pdb; pdb.set_trace()
+        metadata = pd.DataFrame([[meta.id, meta.dataset_id, *meta.values] for meta in cls.get_all()], columns = cls._columns()).drop("id", axis = 1)
+        metadata_means = {feature: np.mean(metadata[feature]) for feature in metadata.columns if feature != "name"}
+        metadata.fillna(value = metadata_means, inplace = True)
+        return metadata

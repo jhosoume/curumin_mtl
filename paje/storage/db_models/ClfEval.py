@@ -1,3 +1,4 @@
+import pandas as pd
 from paje.storage.db_models.Model import Model
 from paje.storage.db_models.Classifier import Classifier
 from paje.storage.db_models.Dataset import Dataset
@@ -7,10 +8,11 @@ from paje.storage.db_models.Preprocess import Preprocess
 class ClfEval(Model):
     table_name = "clfevals"
 
-    def __init__(self, classifier = None, dataset = None, score = None, preprocess = None, value = 0.0, id = None):
+    def __init__(self, classifier = None, dataset = None, score = None, preprocess = None, value = 0.0, id = None, dataset_id = None):
         self.id = id
         self.classifier = classifier
         self.dataset = dataset
+        self.dataset_id = dataset_id
         self.score = score
         self.preprocess = preprocess
         self.value = value
@@ -68,6 +70,7 @@ class ClfEval(Model):
             id = inst[0],
             classifier = Classifier.get(inst[1]).name,
             dataset = Dataset.get(inst[2]).name,
+            dataset_id = inst[2],
             score = Score.get(inst[3]).name,
             preprocess = Preprocess.get(inst[4]).name,
             value = inst[5]
@@ -113,3 +116,17 @@ class ClfEval(Model):
             WHERE classifier_id = (SELECT id FROM classifiers WHERE name = %s);
         """
         return cls._fetchall(sql_select, [classifier_name])
+
+    @classmethod
+    def get_by_classifier_preprocess(cls, classifier_name, preprocess_name):
+        sql_select = """
+            SELECT * FROM clfevals
+            WHERE classifier_id = (SELECT id FROM classifiers WHERE name = %s) AND
+                  preprocess_id = (SELECT id FROM preprocesses WHERE name = %s);
+        """
+        return cls._fetchall(sql_select, [classifier_name, preprocess_name])
+
+    @classmethod
+    def get_matrix(cls, classifier_name, preprocess_name):
+        return pd.DataFrame([[eval.dataset_id, eval.value]
+            for eval in cls.get_by_classifier_preprocess(classifier_name, preprocess_name)], columns = ["dataset_id", "eval"])

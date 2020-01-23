@@ -28,72 +28,15 @@ class RegressorsEval:
         self.preprocessors = preprocessors
         self.classifiers = classifiers
         self.metric = metric
-        Metadata.get_matrix()
 
     # Calculates a metric for each dataset
-    def calculate(self, dataset_filename):
-        # Reading dataset
-        data = Data.read_arff(self.datasets_dir + dataset_filename, "class")
-        # The pipeline is created (creates all the possible combinations of
-        # preprocessors and modellers indicated)
-        preprocesses = [None] + self.preprocessors
-        for preproc in preprocesses:
-            for classifier in self.classifiers:
-                pipeline = [preproc, classifier] if preproc else [classifier]
-                pipe = self.pipeline_evaluator(
-                    Seq.cfg(
-                            configs = pipeline,
-                            random_state = self.random_state
-                    )
-                )
-                # Apply and use the defined pipeline on the data
-                datapp = pipe.apply(data)
-                datause = pipe.use(data)
-                # The value is stored into data as assigned in the field parameter inside
-                # the configuration of the reducer (Summ = np.mean)
-                preproc_name = preproc['class'] if preproc else 'None'
-                eval = ClfEval(
-                    classifier = classifier['class'],
-                    dataset = dataset_filename,
-                    score = self.metric['function'],
-                    preprocess = preproc_name,
-                    value = datause.s
-                ).save()
-                print(pipe, datapp.s, datause.s)
-
-    # Define basis pipeline -> execute CV, the
-    def pipeline_evaluator(self, pipeline):
-        # Pipeline should be a configuration of preprocessors + modellers
-        # For each CV slice executes the pipeline (preprocess + modeller) then
-        # calculates a Metric
-        internal_pipe = Seq.cfg(
-            configs=[
-                pipeline,
-                self.metric  # from Y to r
-            ],
-            random_state = self.random_state
-        )
-
-        # Defines the CV to be applied in the dataset and the function to reduce
-        # the metric calc
-        iterator_pipe = Seq.cfg(
-            configs=[
-                Iterator.cfg(
-                    iterable=CV.cfg(split='cv', steps=10, fields=['X', 'Y']),
-                    configs=[internal_pipe],
-                    field='r'
-                ),
-                Summ.cfg(field='s', function='mean')
-            ]
-        )
-        # Wrapper? Note that it does not call the cfg, but is an instance of the class
-        pipe = Seq(
-            config={
-                'configs': [iterator_pipe],
-                'random_state': self.random_state
-            }
-        )
-        return pipe
+    def calculate(self, classifier_name, preprocess_name, score = "accuracy"):
+        metadata = Metadata.get_matrix()
+        clf_evals = ClfEval.get_matrix(classifier_name, preprocess_name)
+        data = pd.merge(metadata, clf_evals, on = "name")
+        values = data.drop(["dataset_id", "eval"], axis = 1).values
+        target = data["eval"].values
+        import pdb; pdb.set_trace()
 
     def apply(self, datasets_fd = "mock_datasets/"):
         # Calculates metafeatures for every datasets in the datasets directory

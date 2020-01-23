@@ -63,6 +63,7 @@ class MtLAutoML(AutoML):
         # self.clfeval.apply(self.train_datasets)
 
         self.regeval = RegressorsEval()
+        self.regeval.calculate("DT", "None")
 
 
         if not isinstance(modelers, list) or \

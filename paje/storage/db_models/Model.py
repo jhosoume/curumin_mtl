@@ -64,6 +64,13 @@ class Model(ABC):
         return cls.db._cursor.fetchall()
 
     @classmethod
+    def _columns(cls):
+        sql_all = "SELECT * FROM {} LIMIT 0;".format(cls.table_name)
+        cls.db.query(sql_all)
+        cls.db._cursor.fetchall()
+        return cls.db._cursor.column_names
+
+    @classmethod
     @abstractmethod
     def _from_query(cls, inst):
         pass

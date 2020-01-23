@@ -45,15 +45,13 @@ class MetaFeatures:
         not_nan = np.invert(nan_columns)
         labels = labels[not_nan].tolist()
         results = results[not_nan].tolist()
-        for indx, (label, result) in enumerate(zip(labels, results)):
             # Sometimes the result is a complex number, use just the real part
+        for indx, result in enumerate(results):
             if isinstance(result, complex):
                 results[indx] = result.real
-                result = result.real
-            # Saving meta knowledge in the database
-            metadata = Metadata(dataset = dataset.name,
-                                feature = str(label),
-                                value = result).save()
+        metadata = Metadata(dataset = dataset.name,
+                            features = labels,
+                            values = results).save()
         return (labels, results)
 
     def apply(self, datasets_fd = "mock_datasets/"):
