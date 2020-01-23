@@ -1,5 +1,5 @@
-import pandas as pd
-import numpy as np
+from os import listdir
+from os.path import isfile, join
 from scipy.io import arff as arff_io
 from sklearn import preprocessing
 from paje.storage.db_models.Dataset import Dataset
@@ -7,7 +7,7 @@ from paje.storage.db_models.ClfEval import ClfEval
 from paje.base.data import Data
 from paje.ml.element.modelling.supervised.classifier.dt import DT
 from paje.ml.element.modelling.supervised.classifier.nb import NB
-from paje.ml.element.preprocessing.supervised.instance.imbalance.smote import SMOTE
+from paje.ml.element.preprocessing.supervised.instance.imbalance.smote import Smote
 from paje.automl.composer.iterator import Iterator
 from paje.automl.composer.seq import Seq
 from paje.base.cache import Cache
@@ -16,30 +16,45 @@ from paje.ml.element.posprocessing.summ import Summ
 from paje.ml.element.preprocessing.supervised.instance.sampler.cv import CV
 
 class ClassifiersEval:
-    def __init__(self):
+    def __init__(self, preprocessors = [Smote.default()],
+                       classifiers = [DT.default()],
+                       metric = Metric.cfg(function='accuracy')):
         self.le = preprocessing.LabelEncoder()
         self.random_state = 123
+        self.preprocessors = preprocessors
+        self.classifiers = classifiers
+        self.metric = metric
 
     # Calculates a metric for each dataset
     def calculate(self, dataset_filename):
         # Reading dataset
-        data = Data.read_arff(dataset_filename, "class")
+        data = Data.read_arff(self.datasets_dir + dataset_filename, "class")
         # The pipeline is created (creates all the possible combinations of
         # preprocessors and modellers indicated)
-        pipe = self.pipeline_evaluator(
-            Seq.cfg(
-                    configs = [DT.default()],
-                    random_state = self.random_state
-            )
-        )
-
-        # Apply and use the defined pipeline on the data
-        datapp = pipe.apply(data)
-        datause = pipe.use(data)
-        # The value is stored into data as assigned in the field parameter inside
-        # the configuration of the reducer (Summ = np.mean)
-        print(pipe, datapp.s, datause.s)
-        return datause.s
+        preprocesses = [None] + self.preprocessors
+        for preproc in preprocesses:
+            for classifier in self.classifiers:
+                pipeline = [preproc, classifier] if preproc else [classifier]
+                pipe = self.pipeline_evaluator(
+                    Seq.cfg(
+                            configs = pipeline,
+                            random_state = self.random_state
+                    )
+                )
+                # Apply and use the defined pipeline on the data
+                datapp = pipe.apply(data)
+                datause = pipe.use(data)
+                # The value is stored into data as assigned in the field parameter inside
+                # the configuration of the reducer (Summ = np.mean)
+                preproc_name = preproc['class'] if preproc else 'None'
+                eval = ClfEval(
+                    classifier = classifier['class'],
+                    dataset = dataset_filename,
+                    score = self.metric['function'],
+                    preprocess = preproc_name,
+                    value = datause.s
+                ).save()
+                print(pipe, datapp.s, datause.s)
 
     # Define basis pipeline -> execute CV, the
     def pipeline_evaluator(self, pipeline):
@@ -49,7 +64,7 @@ class ClassifiersEval:
         internal_pipe = Seq.cfg(
             configs=[
                 pipeline,
-                Metric.cfg(function='accuracy')  # from Y to r
+                self.metric  # from Y to r
             ],
             random_state = self.random_state
         )
@@ -74,3 +89,13 @@ class ClassifiersEval:
             }
         )
         return pipe
+
+    def apply(self, datasets_fd = "mock_datasets/"):
+        # Calculates metafeatures for every datasets in the datasets directory
+        self.datasets_dir = datasets_fd
+        # Getting list of datasets inside directory
+        self.datasets = [f for f in listdir(self.datasets_dir)
+            if ( isfile(join(self.datasets_dir, f)) and
+               ( f.endswith("json") or f.endswith("arff") ) )]
+        for dataset in self.datasets:
+            self.calculate(dataset)

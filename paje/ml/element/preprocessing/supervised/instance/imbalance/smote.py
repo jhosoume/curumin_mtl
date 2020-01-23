@@ -5,7 +5,7 @@ from paje.ml.element.preprocessing.supervised.instance.imbalance.imbalance impor
 from paje.util.distributions import choice
 
 
-class SMOTE(Imbalance):
+class Smote(Imbalance):
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
         self.model = SMOTE(**self.param())
@@ -26,6 +26,7 @@ class SMOTE(Imbalance):
     def default(cls):
         config = {
             'sampling_strategy': 'auto',
+            'k_neighbors': 5
         }
         config['class'] = cls.__name__
         config['module'] = cls.__module__

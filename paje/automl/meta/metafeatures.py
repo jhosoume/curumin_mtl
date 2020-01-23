@@ -59,6 +59,7 @@ class MetaFeatures:
     def apply(self, datasets_fd = "mock_datasets/"):
         # Calculates metafeatures for every datasets in the datasets directory
         self.datasets_dir = datasets_fd
+        # Getting list of datasets inside directory
         self.datasets = [f for f in listdir(self.datasets_dir)
             if ( isfile(join(self.datasets_dir, f)) and
                ( f.endswith("json") or f.endswith("arff") ) )]

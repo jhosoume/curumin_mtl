@@ -33,7 +33,7 @@ class DT(Classifier):
             'min_impurity_decrease': RealHP(uniform, low=0.0, high=0.2)
         }
 
-        return ConfigSpace(name='DT', hps=hps)
+        return ConfigSpace(name=cls.__name__, hps=hps)
 
     @classmethod
     # Creates a configuration of only default options

@@ -18,7 +18,7 @@ class Classifier(Model):
             CREATE TABLE IF NOT EXISTS {} (
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(255) NOT NULL UNIQUE,
-                type VARCHAR(255) NOT NULL,
+                type VARCHAR(255),
                 INDEX (name)
             );
         """.format(cls.table_name)

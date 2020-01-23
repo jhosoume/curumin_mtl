@@ -59,7 +59,7 @@ class MtLAutoML(AutoML):
         # self.mfe.apply(self.train_datasets)
 
         self.clfeval = ClassifiersEval()
-        self.clfeval.calculate("abalone3.arff")
+        self.clfeval.apply(self.train_datasets)
 
         if not isinstance(modelers, list) or \
                 not isinstance(preprocessors, list):
