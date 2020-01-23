@@ -40,7 +40,7 @@ class Metadata(Model):
     def save(self):
         dt = Dataset.get_or_insert(self.dataset)
         sql_insert = """
-            INSERT INTO metadata ({})
+            INSERT IGNORE INTO metadata ({})
                 VALUES (
                     {}
                 )

@@ -54,7 +54,7 @@ class ClfEval(Model):
         score = Score.get_or_insert(self.score)
         preprocess = Preprocess.get_or_insert(self.preprocess)
         sql_insert = """
-            INSERT INTO clfevals (classifier_id, dataset_id, score_id, preprocess_id, value)
+            INSERT IGNORE INTO clfevals (classifier_id, dataset_id, score_id, preprocess_id, value)
                 VALUES (
                     %s, %s, %s, %s, %s
                 );

@@ -52,18 +52,6 @@ class MtLAutoML(AutoML):
         self.repetitions = repetitions
         self.pipe_length = pipe_length
         # __init__()
-        self.modelers = modelers
-        self.preprocessors = preprocessors
-        self.train_datasets = train_datasets
-
-        self.mfe = MetaFeatures()
-        # self.mfe.apply(self.train_datasets)
-
-        self.clfeval = ClassifiersEval()
-        # self.clfeval.apply(self.train_datasets)
-
-        self.regeval = RegressorsEval()
-        self.regeval.calculate("DT", "None")
 
 
         if not isinstance(modelers, list) or \
@@ -74,6 +62,23 @@ class MtLAutoML(AutoML):
 
         if not modelers:
             raise ValueError("The list length must be greater than one.")
+
+        self.classifiers = modelers
+        self.preprocessors = preprocessors
+        self.train_datasets = train_datasets
+
+        self.mfe = MetaFeatures()
+        # self.mfe.apply(self.train_datasets)
+
+        self.clfeval = ClassifiersEval(self.preprocessors, self.classifiers)
+        self.clfeval.apply()
+
+        self.regressors = {}
+        self.reg_models["decision_tree"] = tree.DecisionTreeRegressor()
+        self.reg_models["random_forest"] = ensemble.RandomForestRegressor()
+
+        self.regeval = RegressorsEval(regressors = self.regressors)
+        self.regeval.apply()
 
         # Other class attributes.
         # These attributes can be set here or in the build_impl method. They
@@ -90,29 +95,16 @@ class MtLAutoML(AutoML):
         self.random_state = random_state
         np.random.seed(self.random_state)
 
+        pipelines = []
+        for preprocesses in [None] + self.preprocessors:
+            for clf in self.classifiers:
+                pipelines = [preprocesses] + [clf]
+
     def next_pipelines(self, data):
         """ TODO the docstring documentation
         """
-        components = self.choose_modules()
-        tree = Seq.cs(config_spaces=components)
+        pass
 
-        config = tree.sample()
-
-        config['random_state'] = self.random_state
-        # self.curr_pipe = Pipeline(
-        #     config, storage_settings=self.storage_settings_for_components
-        # )
-        self.curr_pipe = config
-        return [config]
-
-    def choose_modules(self):
-        """ TODO the docstring documentation
-        """
-        take = np.random.randint(0, self.pipe_length)
-
-        preprocessors = self.preprocessors * (self.repetitions + 1)
-        np.random.shuffle(preprocessors)
-        return preprocessors[:take] + [np.random.choice(self.modelers)]
 
     def process_step(self, eval_result):
         """ TODO the docstring documentation
@@ -139,58 +131,27 @@ class MtLAutoML(AutoML):
         return self.best_eval
 
     def eval(self, pip_config, data):
-        fast = False  # TODO: True -> composer line 35, KeyError: 'random_state'
-        if fast:
-            internal = Seq.cfg(
-                configs=[
-                    pip_config,
-                    Metric.cfg(function='accuracy')  # from Y to r
-                ],
-                random_state=self.random_state
-            )
-        else:
-            internal = Seq.cfg(
-                configs=[
-                    Cache.cfg(
-                        configs=[pip_config],
-                        **self.storage_settings_for_components
-                    ),
-                    Metric.cfg(function='accuracy')  # from Y to r
-                ],
-                random_state=self.random_state
-            )
-
-        iterat = Seq.cfg(
-            configs=[
-                Iterator.cfg(
-                    iterable=CV.cfg(split='cv', steps=10, fields=['X', 'Y']),
-                    configs=[internal],
-                    field='r'
-                ),
-                Summ.cfg(field='s', function='mean')
-            ]
-        )
-
-        if fast:
-            dic = self.storage_settings_for_components
-            dic['configs'] = [iterat]
-            pip = Cache(config=dic)
-        else:
-            pip = Seq(
-                config={
-                    'configs': [iterat],
-                    'random_state': self.random_state
-                }
-            )
-
-        print('aaaaaaaaaaaaaaaaaaaaaaaaa')
-        datapp = pip.apply(data)
-        if datapp is None:
-            return pip, (None, None)
-
-        print('uuuuuuuuuuuuuuuuuuuuuuuuu')
-        datause = pip.use(data)
-        if datause is None:
-            return pip, (None, None)
-
         return pip, (datapp.s, datause.s)
+
+    def apply_impl(self, data):
+        """ TODO the docstring documentation
+        """
+        self.all_eval_results = []
+
+        for iteration in range(1, self.max_iter + 1):
+            self.current_iteration = iteration
+            if self.verbose:
+                print("####------##-----##-----##-----##-----##-----####")
+                print("Current iteration = ", self.current_iteration)
+
+
+            # This attribute save all results
+            self.all_eval_results.append(eval_result)
+
+            self.process_step(eval_result)
+            if self.verbose:
+                print("Current ...............: ", self.get_current_eval())
+                print("Best ..................: ", self.get_best_eval())
+                print("Locks/fails/successes .: {0}/{1}/{2}".format(
+                    self.locks, self.fails, self.successes))
+                print("-------------------------------------------------\n")

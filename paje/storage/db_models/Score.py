@@ -23,7 +23,7 @@ class Score(Model):
 
     def save(self):
         sql_insert = """
-            INSERT INTO scores (name)
+            INSERT IGNORE INTO scores (name)
                 VALUES (%s);
         """
         Score._query(sql_insert, [self.name])
@@ -65,7 +65,7 @@ class Score(Model):
             return result
         else:
             sql_insert = """
-                INSERT INTO scores (name)
+                INSERT IGNORE INTO scores (name)
                     VALUES (%s);
             """
             cls._query(sql_insert, [name])

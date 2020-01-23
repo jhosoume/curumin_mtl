@@ -69,7 +69,7 @@ class Regressor(Model):
             return result
         else:
             sql_insert = """
-                INSERT INTO regressors (name)
+                INSERT IGNORE INTO regressors (name)
                     VALUES (%s);
             """
             cls._query(sql_insert, [name])

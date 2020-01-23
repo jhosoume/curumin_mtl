@@ -26,7 +26,7 @@ class Preprocess(Model):
 
     def save(self):
         sql_insert = """
-            INSERT INTO preprocesses (name, type)
+            INSERT IGNORE INTO preprocesses (name, type)
                 VALUES (%s, %s);
         """
         Preprocess._query(sql_insert, [self.name, self.type])

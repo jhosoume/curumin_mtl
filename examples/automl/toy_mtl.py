@@ -10,6 +10,7 @@ from paje.ml.element.modelling.supervised.classifier.nb import NB
 from paje.ml.element.modelling.supervised.classifier.nbp import NBP
 from paje.ml.element.preprocessing.supervised.instance.sampler.over.ran_over_sampler import \
     RanOverSampler
+from paje.ml.element.preprocessing.supervised.instance.imbalance.smote import Smote
 from paje.ml.element.preprocessing.supervised.instance.sampler.under.ran_under_sampler import \
     RanUnderSampler
 from paje.ml.element.preprocessing.unsupervised.feature.scaler.equalization import \
@@ -26,14 +27,8 @@ def main():
               'db=dna]')
     else:
         arg = {tupl.split('=')[0]: tupl.split('=')[1] for tupl in sys.argv[1:]}
-
-        custom = Seq.cs(config_spaces=[Equalization.cs(), Standard.cs()])
-        my_preprocessors = [custom,
-                            Equalization.cs(),
-                            Standard.cs(),
-                            RanOverSampler.cs(),
-                            RanUnderSampler.cs()]
-        my_modelers = [DT.cs(), NB.cs()]
+        my_preprocessors = [Smote.default()]
+        my_modelers = [DT.default()]
         #, NBP.cs()])] # <- requires non negative X
 
         for k, v in arg.items():
