@@ -74,7 +74,7 @@ def main():
             cache_settings_for_components=storage,
             config={}
         )
-        # automl_rs.apply(trainset)
+        automl_rs.apply(trainset)
         # testout = automl_rs.use(testset)
         # if testout is None:
         #     print('No working pipeline found!')

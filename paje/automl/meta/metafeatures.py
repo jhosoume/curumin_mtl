@@ -24,19 +24,9 @@ class MetaFeatures:
             data = pd.DataFrame(data[0])
         # Getting target column
         target = data["class"].values
-        # Dealing with object columns (non numeric)
-        if target.dtype == np.object:
-            self.le.fit(target)
-            target = self.le.transform(target)
         # Separating from data from labels
         values = data.drop("class", axis = 1).values
-        # Calculating metafeatures
-        self.mfe.fit(values, target)
-        try:
-            ft = self.mfe.extract()
-        except AttributeError:
-            self.mfe.fit(values.astype(float), target)
-            ft = self.mfe.extract()
+        ft = metafeatures(values, target)
         # Getting metafeatures names (labels) and the calculated values (results)
         labels = np.array(ft[0])
         results = np.array(ft[1])
@@ -53,6 +43,21 @@ class MetaFeatures:
                             features = labels,
                             values = results).save()
         return (labels, results)
+
+    def metafeatures(self, values, target):
+        # Dealing with object columns (non numeric)
+        if target.dtype == np.object:
+            self.le.fit(target)
+            target = self.le.transform(target)
+        # Calculating metafeatures
+        self.mfe.fit(values, target)
+        try:
+            ft = self.mfe.extract()
+        except AttributeError:
+            self.mfe.fit(values.astype(float), target)
+            ft = self.mfe.extract()
+        return ft
+
 
     def apply(self, datasets_fd = "mock_datasets/"):
         # Calculates metafeatures for every datasets in the datasets directory

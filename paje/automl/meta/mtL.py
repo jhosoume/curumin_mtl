@@ -1,5 +1,6 @@
 import numpy as np
-from pymfe.mfe import MFE
+import pandas as pd
+from operator import attrgetter
 from paje.automl.automl import AutoML
 from paje.automl.composer.iterator import Iterator
 from paje.automl.composer.seq import Seq
@@ -10,6 +11,7 @@ from paje.ml.element.preprocessing.supervised.instance.sampler.cv import CV
 from paje.automl.meta.metafeatures import MetaFeatures
 from paje.automl.meta.classifiers_eval import ClassifiersEval
 from paje.automl.meta.regressors_eval import RegressorsEval
+from paje.storage.db_models.Metadata import Metadata
 
 class MtLAutoML(AutoML):
 
@@ -67,18 +69,20 @@ class MtLAutoML(AutoML):
         self.preprocessors = preprocessors
         self.train_datasets = train_datasets
 
-        self.mfe = MetaFeatures()
-        # self.mfe.apply(self.train_datasets)
+        self.metafe = MetaFeatures()
+        # self.metafe.apply(self.train_datasets)
 
         self.clfeval = ClassifiersEval(self.preprocessors, self.classifiers)
-        self.clfeval.apply()
+        # self.clfeval.apply()
 
-        self.regressors = {}
-        self.reg_models["decision_tree"] = tree.DecisionTreeRegressor()
-        self.reg_models["random_forest"] = ensemble.RandomForestRegressor()
 
-        self.regeval = RegressorsEval(regressors = self.regressors)
-        self.regeval.apply()
+        self.regeval = RegressorsEval()
+        self.trained_regs = self.regeval.apply()
+
+        # Getting means of all the calculated features to fill Nan values
+        # of MFE
+        self.metadata = Metadata.get_matrix()
+        self.metadata_means = {feature: np.mean(self.metadata[feature]) for feature in self.metadata.columns if feature != "name"}
 
         # Other class attributes.
         # These attributes can be set here or in the build_impl method. They
@@ -130,28 +134,24 @@ class MtLAutoML(AutoML):
         """
         return self.best_eval
 
-    def eval(self, pip_config, data):
+    def eval(self, data):
         return pip, (datapp.s, datause.s)
 
     def apply_impl(self, data):
         """ TODO the docstring documentation
         """
-        self.all_eval_results = []
-
         for iteration in range(1, self.max_iter + 1):
-            self.current_iteration = iteration
-            if self.verbose:
-                print("####------##-----##-----##-----##-----##-----####")
-                print("Current iteration = ", self.current_iteration)
-
-
-            # This attribute save all results
-            self.all_eval_results.append(eval_result)
-
-            self.process_step(eval_result)
-            if self.verbose:
-                print("Current ...............: ", self.get_current_eval())
-                print("Best ..................: ", self.get_best_eval())
-                print("Locks/fails/successes .: {0}/{1}/{2}".format(
-                    self.locks, self.fails, self.successes))
-                print("-------------------------------------------------\n")
+            values, target = data.Xy
+            features = self.metafe.metafeatures(values, target)
+            mfe_values = np.array(features[1]).reshape(1, len(features[1]))
+            features = pd.DataFrame(mfe_values, columns = features[0])
+            features.fillna(value = self.metadata_means, inplace = True)
+            results = []
+            for regressor in self.trained_regs:
+                result = regressor['model'].predict(features)
+                regressor['result'] = result
+                results.append(regressor)
+            best_result = max(results, key = lambda prediction: prediction['result'])
+            # TODO
+            if best_result["preprocess"] == "None":
+                break
