@@ -70,10 +70,10 @@ class MtLAutoML(AutoML):
         self.train_datasets = train_datasets
 
         self.metafe = MetaFeatures()
-        # self.metafe.apply(self.train_datasets)
+        self.metafe.apply(self.train_datasets)
 
         self.clfeval = ClassifiersEval(self.preprocessors, self.classifiers)
-        # self.clfeval.apply()
+        self.clfeval.apply()
 
 
         self.regeval = RegressorsEval()
@@ -122,7 +122,7 @@ class MtLAutoML(AutoML):
     def get_best_pipeline(self):
         """ TODO the docstring documentation
         """
-        return Seq(self.best_pipe)
+        return self.best_pipe
 
     def get_current_eval(self):
         """ TODO the docstring documentation
@@ -140,6 +140,7 @@ class MtLAutoML(AutoML):
     def apply_impl(self, data):
         """ TODO the docstring documentation
         """
+        preprocessors_pipeline = []
         for iteration in range(1, self.max_iter + 1):
             values, target = data.Xy
             features = self.metafe.metafeatures(values, target)
@@ -152,6 +153,40 @@ class MtLAutoML(AutoML):
                 regressor['result'] = result
                 results.append(regressor)
             best_result = max(results, key = lambda prediction: prediction['result'])
-            # TODO
             if best_result["preprocess"] == "None":
+                classifier = next(clf for clf in self.classifiers if clf["class"] == best_result["clf"])
+                if preprocessors_pipeline:
+                    self.best_pipe = Seq(
+                        config = {"configs": [Seq.cfg(configs = [preprocessors_pipeline.append(classifier)], random_state = self.random_state)],
+                                  "random_state": self.random_state
+                        }
+                    )
+                else:
+                    self.best_pipe = Seq(
+                        config = {"configs": [Seq.cfg(configs = [classifier], random_state = self.random_state)],
+                                  "random_state": self.random_state
+                        }
+                    )
                 break
+            else:
+                pproc = next(preprocess for preprocess in self.preprocessors if preprocess["class"] == best_result["preprocess"])
+                preprocessors_pipeline.append(pproc)
+                pproc_pipeline = Seq(
+                    config = {"configs": [Seq.cfg(configs = [prproc], random_state = self.random_state)],
+                              "random_state": self.random_state
+                    }
+                )
+                pproc_pipeline.apply(data)
+                pproc_pipeline.use(data)
+        self.best_pipe = Seq(
+            config = {"configs": [Seq.cfg(configs = [classifier], random_state = self.random_state)],
+                      "random_state": self.random_state
+            }
+        )
+
+        self.model = self.get_best_pipeline()
+        if self.verbose:
+            print("Best pipeline found:")
+            print(self.model)
+
+        return self.model.apply(data)

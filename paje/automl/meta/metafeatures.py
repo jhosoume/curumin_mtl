@@ -26,7 +26,7 @@ class MetaFeatures:
         target = data["class"].values
         # Separating from data from labels
         values = data.drop("class", axis = 1).values
-        ft = metafeatures(values, target)
+        ft = self.metafeatures(values, target)
         # Getting metafeatures names (labels) and the calculated values (results)
         labels = np.array(ft[0])
         results = np.array(ft[1])

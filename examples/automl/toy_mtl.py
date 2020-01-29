@@ -75,12 +75,12 @@ def main():
             config={}
         )
         automl_rs.apply(trainset)
-        # testout = automl_rs.use(testset)
-        # if testout is None:
-        #     print('No working pipeline found!')
-        #     exit(0)
-        # print("Accuracy score", Metrics.accuracy(testout))
-        # print()
+        testout = automl_rs.use(testset)
+        if testout is None:
+            print('No working pipeline found!')
+            exit(0)
+        print("Accuracy score", Metrics.accuracy(testout))
+        print()
 
 
 if __name__ == '__main__':
