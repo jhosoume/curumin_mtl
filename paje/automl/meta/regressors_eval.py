@@ -34,18 +34,26 @@ class RegressorsEval:
 
     # Calculates a metric for each dataset
     def calculate(self, classifier_name, preprocess_name, score = "accuracy"):
+        # Initialize array to store results
         regressor_data = []
+        # Get mfe and classifiers scores to train regressors
         metadata = Metadata.get_matrix()
         clf_evals = ClfEval.get_matrix(classifier_name, preprocess_name)
+        # Merge both matrix to ensure that results are associeted
+        # (mfe and score for the same dataset)
         data = pd.merge(metadata, clf_evals, on = "dataset_id")
         values = data.drop(["dataset_id", "eval"], axis = 1).values
         target = data["eval"].values
         for regressor in self.reg_models:
+            # Initialize new estimator
             model = self.reg_models[regressor]()
+            # Fit and save the regressor
             model = model.fit(values, target)
             with open("regressors/{}_{}_{}_{}.pickle".format(
                         regressor, classifier_name, score, preprocess_name), "wb") as fd:
                 pickle.dump(model, fd)
+            # Informatio of regresssor is storeed as a dict,
+            # must be subtituted for a regeval instance
             regressor_info = {
                 'reg': regressor,
                 'clf': classifier_name,
@@ -57,6 +65,8 @@ class RegressorsEval:
         return regressor_data
 
     def apply(self):
+        # Applyies the regressor training (calculate) for all regressors,
+        # classifiers and preprocessors
         all_regressors = []
         for classifier in self.classifiers:
             for preproc in [None] + self.preprocessors:
